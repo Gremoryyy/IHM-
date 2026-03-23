@@ -1,0 +1,3 @@
+-- robot6ddl.sql
+-- Placeholder temporaire : le script SQL complet doit être récupéré
+-- depuis la branche julien-bdd-php-readme.

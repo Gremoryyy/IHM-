@@ -23,6 +23,10 @@ $default = [
     'DB_NAME' => 'robot6ddl',
     'DB_USER' => 'root',
     'DB_PASS' => '',
+
+    // Google reCAPTCHA v2
+    'RECAPTCHA_SITE_KEY' => '',
+    'RECAPTCHA_SECRET_KEY' => '',
 ];
 
 $localPath = __DIR__ . '/config.local.php';

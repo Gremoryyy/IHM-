@@ -29,52 +29,63 @@ function portal_require_auth(array $config): void
     }
 }
 
-function portal_refresh_captcha(): void
+function portal_client_ip(): string
 {
-    $_SESSION['portal_captcha_left'] = random_int(1, 9);
-    $_SESSION['portal_captcha_right'] = random_int(1, 9);
-    $_SESSION['portal_captcha_answer'] = (int)$_SESSION['portal_captcha_left'] + (int)$_SESSION['portal_captcha_right'];
-}
-
-function portal_captcha_question(): string
-{
-    if (!isset($_SESSION['portal_captcha_answer'])) {
-        portal_refresh_captcha();
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        return trim(explode(',', (string)$_SERVER['HTTP_X_FORWARDED_FOR'])[0]);
     }
 
-    return sprintf(
-        'Combien font %d + %d ?',
-        (int)($_SESSION['portal_captcha_left'] ?? 0),
-        (int)($_SESSION['portal_captcha_right'] ?? 0)
-    );
+    return (string)($_SERVER['REMOTE_ADDR'] ?? '');
 }
 
-function portal_validate_captcha(string $captcha): bool
+function portal_verify_recaptcha(array $config, string $token): bool
 {
-    if (!isset($_SESSION['portal_captcha_answer'])) {
-        portal_refresh_captcha();
+    $secret = (string)($config['RECAPTCHA_SECRET_KEY'] ?? '');
+    if ($secret === '') {
         return false;
     }
 
-    return ctype_digit($captcha)
-        && (int)$captcha === (int)($_SESSION['portal_captcha_answer'] ?? -1);
+    if ($token === '') {
+        return false;
+    }
+
+    $postFields = http_build_query([
+        'secret' => $secret,
+        'response' => $token,
+        'remoteip' => portal_client_ip(),
+    ]);
+
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => "Content-Type: application/x-www-form-urlencoded\r\n",
+            'content' => $postFields,
+            'timeout' => 10,
+        ],
+    ]);
+
+    $raw = @file_get_contents('https://www.google.com/recaptcha/api/siteverify', false, $context);
+    if ($raw === false) {
+        return false;
+    }
+
+    $decoded = json_decode($raw, true);
+    return is_array($decoded) && ($decoded['success'] ?? false) === true;
 }
 
-function portal_login(array $config, bool $acceptedTerms, string $code, string $captcha): array
+function portal_login(array $config, bool $acceptedTerms, string $code, string $recaptchaToken): array
 {
     if (!$acceptedTerms) {
         return ['ok' => false, 'error' => 'Tu dois accepter les conditions d’utilisation.'];
     }
 
-    if (!portal_validate_captcha($captcha)) {
-        portal_refresh_captcha();
-        return ['ok' => false, 'error' => 'Captcha incorrect.'];
+    if (!portal_verify_recaptcha($config, $recaptchaToken)) {
+        return ['ok' => false, 'error' => 'reCAPTCHA invalide.'];
     }
 
     $requiredCode = (string)($config['ACCESS_CODE'] ?? '');
     if ($requiredCode !== '') {
         if (!hash_equals($requiredCode, $code)) {
-            portal_refresh_captcha();
             return ['ok' => false, 'error' => 'Code d’accès incorrect.'];
         }
     }
@@ -83,7 +94,6 @@ function portal_login(array $config, bool $acceptedTerms, string $code, string $
     $_SESSION['portal_auth'] = true;
     $_SESSION['portal_auth_at'] = time();
     $_SESSION['portal_terms_accepted'] = true;
-    portal_refresh_captcha();
 
     return ['ok' => true, 'error' => null];
 }

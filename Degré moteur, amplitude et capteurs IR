@@ -1,0 +1,32 @@
+Degrés cerveau moteur : 
+-Pin 6 (socle) -> 0 = vers la palette 180 = autre côté
+-Pin 7 (1er bras) -> 0 = vers l'avant 180 = vers l'arrière
+-Pin 8 (2ème bras) -> 0 = vers le haut 180 = vers le bas
+-Pin 9 (permet de tourner)
+-Pin 10 (bras de la pince) -> 0 = vers le bas 180 = vers le haut
+-Pin 11 (pince) -> 0 = fermé 180 = ouvert
+
+
+
+Degré boite 1 -> pin 6 = 160° pin 7 = 65° pin 8 = 175° pin 9 = 80°  pin 10 = 40° pin 11 = 40°
+Degré boite 2 -> pin 6 = 135° pin 7 = 65° pin 8 = 175° pin 9 = 80°  pin 10 = 40° pin 11 = 40°
+Degré boite 3 -> pin 6 = 110° pin 7 = 65° pin 8 = 175° pin 9 = 80°  pin 10 = 40° pin 11 = 40°
+Degré boite 4 -> pin 6 = 85° pin 7 = 65° pin 8 = 175° pin 9 = 80°  pin 10 = 40° pin 11 = 40°
+Degré palette -> pin 6 = 50° pin 7 = 65° pin 8 = 175° pin 9 = 80°  pin 10 = 40° pin 11 = 40°
+
+capteurs infrarouges :
+boite 1 = pin5
+boite 2 = pin4
+boite 3 = pin3
+boite 4 = pin2
+
+il faut toujours que la luminosité soit la même pour les capteurs IR car les paramètres ne peuvent pas se changer automatiquement 
+
+
+position de repos :
+6 = 40
+7 = 130
+8 = 180
+9 = 80
+10 = 0
+11 = 40

@@ -63,6 +63,30 @@ $assignmentOptions = robot_assignment_options();
               </div>
             </section>
 
+            <section class="panel demo-visual-panel" style="grid-column: span 12;">
+              <div class="robot-card-head">
+                <div>
+                  <span class="eyebrow">Simulation 3D</span>
+                  <h2 style="margin:4px 0 0 0;">Aperçu simplifié du bras robot</h2>
+                </div>
+                <span class="badge" data-visual-status>Visualisation prête</span>
+              </div>
+              <p class="muted" style="margin-top:0;">
+                Active le mode démo pour voir un bras 3D stylisé suivre les angles de la commande en cours.
+              </p>
+              <div class="demo-visual-grid">
+                <div class="demo-visual-canvas" data-robot-visual></div>
+                <div class="demo-visual-info">
+                  <span class="badge">Robot affiché: <span data-visual-robot>Robot 1</span></span>
+                  <span class="badge">Position: <span data-visual-assignment>Boite 1</span></span>
+                  <span class="badge">Etat: <span data-visual-mode>Attente</span></span>
+                  <p class="muted" data-visual-caption>
+                    Le bras se repositionne automatiquement selon les angles affichés dans le détail technique.
+                  </p>
+                </div>
+              </div>
+            </section>
+
             <section class="section-intro" style="grid-column: span 12;">
               <h2>Robots</h2>
               <p class="muted">
@@ -133,6 +157,6 @@ $assignmentOptions = robot_assignment_options();
       </div>
     </div>
 
-    <script src="/assets/app.js"></script>
+    <script type="module" src="/assets/app.js"></script>
   </body>
 </html>

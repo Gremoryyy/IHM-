@@ -1,3 +1,5 @@
+import { createRobotVisual } from './robot-visual.js';
+
 (() => {
   const qs = (sel, root = document) => root.querySelector(sel);
   const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -8,10 +10,16 @@
   const btnLaunchAll = qs('[data-global-action="launch-all"]');
   const btnDemoToggle = qs('[data-demo-toggle]');
   const demoBadge = qs('[data-demo-badge]');
+  const visualContainer = qs('[data-robot-visual]');
+  const visualRobot = qs('[data-visual-robot]');
+  const visualAssignment = qs('[data-visual-assignment]');
+  const visualMode = qs('[data-visual-mode]');
+  const visualStatus = qs('[data-visual-status]');
 
   let currentState = null;
   let assignmentOptions = {};
   let demoMode = window.localStorage.getItem('robot-demo-mode') === '1';
+  const visual = visualContainer ? createRobotVisual(visualContainer) : null;
 
   const createDemoState = () => ({
     updated_at: new Date().toISOString(),
@@ -51,6 +59,16 @@
     if (btnDemoToggle) {
       btnDemoToggle.textContent = demoMode ? 'Désactiver le mode démo' : 'Activer le mode démo';
     }
+  };
+
+  const renderVisual = (robots) => {
+    if (!visual || robots.length === 0) return;
+    const targetRobot = robots.find((robot) => robot.running) || robots[0];
+    visual.applyAngles(targetRobot.current_angles || {});
+    if (visualRobot) visualRobot.textContent = targetRobot.name || `Robot ${targetRobot.id}`;
+    if (visualAssignment) visualAssignment.textContent = assignmentLabel(targetRobot.assignment);
+    if (visualMode) visualMode.textContent = targetRobot.running ? 'Simulation en mouvement' : 'Attente';
+    if (visualStatus) visualStatus.textContent = demoMode ? 'Visualisation démo active' : 'Visualisation liée à l’état courant';
   };
 
   const renderCard = (card, robot) => {
@@ -108,6 +126,7 @@
       if (robot) renderCard(card, robot);
     });
     updateSummary(robots);
+    renderVisual(robots);
   };
 
   const postAction = async (payload) => {

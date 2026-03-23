@@ -96,6 +96,7 @@ a { color: inherit; }
 .btn:hover { border-color: rgba(255,255,255,0.22); }
 .btn.primary { background: rgba(124,92,255,0.22); border-color: rgba(124,92,255,0.55); }
 .btn.danger { background: rgba(255,77,109,0.18); border-color: rgba(255,77,109,0.5); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
 .row {
   display: flex;
@@ -114,7 +115,18 @@ input[type="text"], input[type="password"]{
   color: var(--text);
   outline: none;
 }
-input:focus { border-color: rgba(124,92,255,0.7); }
+select,
+input[type="text"], input[type="password"]{
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.18);
+  color: var(--text);
+  outline: none;
+}
+input:focus,
+select:focus { border-color: rgba(124,92,255,0.7); }
 
 .error {
   margin: 10px 0 0 0;
@@ -154,6 +166,19 @@ input:focus { border-color: rgba(124,92,255,0.7); }
 }
 .dot.good { background: var(--good); }
 .dot.bad { background: var(--bad); }
+.dot.pulse { animation: pulse 1.2s infinite ease-in-out; }
+
+.angles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 3px rgba(255,255,255,0.06); }
+  50% { transform: scale(1.12); box-shadow: 0 0 0 6px rgba(59,214,113,0.14); }
+  100% { transform: scale(1); box-shadow: 0 0 0 3px rgba(255,255,255,0.06); }
+}
 
 details {
   border: 1px solid var(--border);
@@ -171,5 +196,5 @@ summary { cursor: pointer; color: var(--muted); font-weight: 700; }
 
 @media (max-width: 820px) {
   .wrap { padding: 14px; }
+  .angles-grid { grid-template-columns: 1fr; }
 }
-

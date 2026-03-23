@@ -64,3 +64,18 @@ function csrf_verify_or_fail(): void
         exit;
     }
 }
+
+/**
+ * @param array<string, mixed> $payload
+ */
+function csrf_verify_request_or_fail(array $payload = []): void
+{
+    $posted = (string)($payload['_csrf'] ?? $_POST['_csrf'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+    $session = (string)($_SESSION['_csrf'] ?? '');
+    if ($posted === '' || $session === '' || !hash_equals($session, $posted)) {
+        http_response_code(400);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => false, 'error' => 'Requete invalide (CSRF).'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}

@@ -105,7 +105,7 @@ $needsCode = ((string)($CONFIG['ACCESS_CODE'] ?? '')) !== '';
         </div>
 
         <div class="footer">
-          Astuce : modifie `ihm2/config.local.php` pour changer le code d’accès sans le committer.
+          Acces reserve aux utilisateurs autorises.
         </div>
       </div>
     </div>

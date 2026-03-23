@@ -84,7 +84,7 @@ portal_require_auth($CONFIG);
         </div>
 
         <div class="footer">
-          IHM2 • PHP/HTML • Portail d’accès (session + CGU + code optionnel)
+          IHM web • PHP/HTML • Portail d’accès (session + CGU + code optionnel)
         </div>
       </div>
     </div>

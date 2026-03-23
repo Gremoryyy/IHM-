@@ -1,26 +1,70 @@
-# Robot pince
+# IHM- — Supervision de robots collaboratifs 6DDL
 
-Ce dépôt contient :
+Ce dépôt regroupe les bases techniques d’un projet BTS CIEL autour de **3 robots collaboratifs 6DDL**.
 
-- `robot_pince.ino` : code Arduino (pince/robot).
-- `ihm2/` : IHM web (PHP/HTML) + page d'accès (portail "application").
+L’objectif de cette phase est de fournir une base **propre, structurée et maintenable** pour un travail d’équipe (IHM web, ESP32, documentation et scripts SQL à venir).
 
-## Démarrer l'IHM (portail + dashboard)
+## Objectif global
 
-1) Configure le code d'accès (optionnel mais recommandé) :
+- Superviser 3 robots via une IHM web.
+- Préparer l’intégration avec ESP32/Arduino et base de données MySQL.
+- Travailler de façon collaborative avec une structure de dépôt claire.
 
-- Copier `ihm2/config.local.php.example` → créer `ihm2/config.local.php`
-- Modifier `ACCESS_CODE` dans `ihm2/config.local.php`
+## Structure du dépôt
 
-2) Lancer un serveur PHP depuis la racine du repo :
-
-```bash
-php -S localhost:8080 -t ihm2
+```text
+.
+├── docs/
+│   └── setup/
+├── esp32/
+│   ├── README.md
+│   └── robot_pince/
+├── ihm_web/
+│   ├── assets/
+│   ├── lib/
+│   └── README.md
+├── .gitignore
+└── README.md
 ```
 
-3) Ouvrir :
+## Technologies utilisées (actuelles)
 
-- Portail : http://localhost:8080/
-- IHM : http://localhost:8080/dashboard.php
+- **PHP / HTML / CSS / JS** : IHM web de supervision.
+- **ESP32 (Arduino framework)** : prototype de code embarqué.
+- **Git / GitHub** : collaboration et versionning.
 
-> Note : si la commande `php` n'existe pas sur ton Mac, installe PHP via Homebrew (`brew install php`) ou utilise MAMP/XAMPP.
+## Grandes parties du projet
+
+- `ihm_web/` : portail d’accès + dashboard de supervision (prototype).
+- `esp32/` : code embarqué ESP32 et documentation de déploiement.
+- `docs/` : documentation de mise en route et notes d’organisation.
+
+## Lancement minimal (IHM web)
+
+Depuis la racine du dépôt :
+
+```bash
+php -S localhost:8080 -t ihm_web
+```
+
+Puis ouvrir :
+
+- Portail : `http://localhost:8080/`
+- Dashboard : `http://localhost:8080/dashboard.php`
+
+Configuration locale du code d’accès :
+
+1. Copier `ihm_web/config.local.php.example` vers `ihm_web/config.local.php`
+2. Modifier `ACCESS_CODE`
+
+## Remarques importantes
+
+- Le dashboard est actuellement un **prototype d’interface** (boutons simulés côté front).
+- L’intégration réelle ESP32/Arduino/BDD reste à brancher progressivement.
+- Les fichiers de configuration locale (`config.local.php`) ne doivent pas être versionnés.
+
+## Recommandation Git (travail d’équipe)
+
+- `main` : branche stable.
+- Créer une branche de travail par tâche (`feature/...`, `fix/...`, `docs/...`).
+- Faire relire puis fusionner (merge) uniquement les changements validés.

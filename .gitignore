@@ -1,0 +1,30 @@
+# OS / fichiers système
+.DS_Store
+Thumbs.db
+
+# IDE / éditeurs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs / temporaires
+*.log
+*.tmp
+*.bak
+
+# PHP / config locale
+ihm_web/config.local.php
+
+# Environnements Python éventuels
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Dépendances JS éventuelles
+node_modules/
+
+# Artefacts de build génériques
+dist/
+build/

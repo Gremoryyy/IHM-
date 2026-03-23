@@ -38,15 +38,18 @@ function portal_client_ip(): string
     return (string)($_SERVER['REMOTE_ADDR'] ?? '');
 }
 
-function portal_verify_recaptcha(array $config, string $token): bool
+/**
+ * @return array{ok: bool, error: string|null}
+ */
+function portal_verify_recaptcha(array $config, string $token): array
 {
     $secret = (string)($config['RECAPTCHA_SECRET_KEY'] ?? '');
     if ($secret === '') {
-        return false;
+        return ['ok' => false, 'error' => 'reCAPTCHA non configuré.'];
     }
 
     if ($token === '') {
-        return false;
+        return ['ok' => false, 'error' => 'Jeton reCAPTCHA manquant.'];
     }
 
     $postFields = http_build_query([
@@ -66,11 +69,25 @@ function portal_verify_recaptcha(array $config, string $token): bool
 
     $raw = @file_get_contents('https://www.google.com/recaptcha/api/siteverify', false, $context);
     if ($raw === false) {
-        return false;
+        return ['ok' => false, 'error' => 'Impossible de vérifier reCAPTCHA.'];
     }
 
     $decoded = json_decode($raw, true);
-    return is_array($decoded) && ($decoded['success'] ?? false) === true;
+    if (!is_array($decoded) || ($decoded['success'] ?? false) !== true) {
+        return ['ok' => false, 'error' => 'reCAPTCHA invalide.'];
+    }
+
+    if (($decoded['action'] ?? '') !== 'portal_login') {
+        return ['ok' => false, 'error' => 'Action reCAPTCHA invalide.'];
+    }
+
+    $score = (float)($decoded['score'] ?? 0.0);
+    $minScore = (float)($config['RECAPTCHA_MIN_SCORE'] ?? 0.5);
+    if ($score < $minScore) {
+        return ['ok' => false, 'error' => 'Score reCAPTCHA trop faible.'];
+    }
+
+    return ['ok' => true, 'error' => null];
 }
 
 function portal_login(array $config, bool $acceptedTerms, string $code, string $recaptchaToken): array
@@ -79,8 +96,9 @@ function portal_login(array $config, bool $acceptedTerms, string $code, string $
         return ['ok' => false, 'error' => 'Tu dois accepter les conditions d’utilisation.'];
     }
 
-    if (!portal_verify_recaptcha($config, $recaptchaToken)) {
-        return ['ok' => false, 'error' => 'reCAPTCHA invalide.'];
+    $captcha = portal_verify_recaptcha($config, $recaptchaToken);
+    if (!($captcha['ok'] ?? false)) {
+        return ['ok' => false, 'error' => (string)($captcha['error'] ?? 'reCAPTCHA invalide.')];
     }
 
     $requiredCode = (string)($config['ACCESS_CODE'] ?? '');

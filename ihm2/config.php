@@ -24,9 +24,10 @@ $default = [
     'DB_USER' => 'root',
     'DB_PASS' => '',
 
-    // Google reCAPTCHA v2
+    // Google reCAPTCHA v3
     'RECAPTCHA_SITE_KEY' => '',
     'RECAPTCHA_SECRET_KEY' => '',
+    'RECAPTCHA_MIN_SCORE' => 0.5,
 ];
 
 $localPath = __DIR__ . '/config.local.php';

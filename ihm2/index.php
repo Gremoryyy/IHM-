@@ -38,7 +38,7 @@ $recaptchaSiteKey = (string)($CONFIG['RECAPTCHA_SITE_KEY'] ?? '');
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Portail d'accès — IHM Robots</title>
     <?php if ($recaptchaSiteKey !== ''): ?>
-      <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+      <script src="https://www.google.com/recaptcha/api.js?render=<?php echo rawurlencode($recaptchaSiteKey); ?>"></script>
     <?php endif; ?>
     <link rel="stylesheet" href="/assets/style.css" />
   </head>
@@ -58,11 +58,12 @@ $recaptchaSiteKey = (string)($CONFIG['RECAPTCHA_SITE_KEY'] ?? '');
             <div class="panel" style="grid-column: span 7;">
               <h2>Connexion</h2>
               <p class="muted" style="margin-top:0;">
-                Pour accéder à l'IHM, accepte les conditions d'utilisation, saisis le mot de passe et valide le captcha.
+                Pour accéder à l'IHM, accepte les conditions d'utilisation puis saisis le mot de passe. La vérification anti-bot se fait automatiquement.
               </p>
 
-              <form method="post" action="/?<?php echo http_build_query(['next' => $next]); ?>">
+              <form method="post" action="/?<?php echo http_build_query(['next' => $next]); ?>" data-recaptcha-form>
                 <input type="hidden" name="_csrf" value="<?php echo htmlspecialchars(csrf_token(), ENT_QUOTES); ?>" />
+                <input type="hidden" name="g-recaptcha-response" value="" data-recaptcha-token />
 
                 <div style="margin-bottom: 12px;">
                   <label for="code">Mot de passe</label>
@@ -70,9 +71,11 @@ $recaptchaSiteKey = (string)($CONFIG['RECAPTCHA_SITE_KEY'] ?? '');
                 </div>
 
                 <div style="margin-bottom: 12px;">
-                  <label>Vérification de sécurité</label>
                   <?php if ($recaptchaSiteKey !== ''): ?>
-                    <div class="g-recaptcha" data-sitekey="<?php echo htmlspecialchars($recaptchaSiteKey, ENT_QUOTES); ?>"></div>
+                    <div class="badge">Sécurité active : Google reCAPTCHA v3</div>
+                    <div class="muted" style="margin-top:6px; font-size:12px;">
+                      Aucun clic n'est requis. Le contrôle se fait automatiquement à l'envoi.
+                    </div>
                   <?php else: ?>
                     <div class="error">reCAPTCHA n'est pas configuré.</div>
                   <?php endif; ?>
@@ -121,5 +124,43 @@ $recaptchaSiteKey = (string)($CONFIG['RECAPTCHA_SITE_KEY'] ?? '');
         </div>
       </div>
     </div>
+    <?php if ($recaptchaSiteKey !== ''): ?>
+      <script>
+        (() => {
+          const form = document.querySelector('[data-recaptcha-form]');
+          const tokenInput = document.querySelector('[data-recaptcha-token]');
+          if (!form || !tokenInput || typeof grecaptcha === 'undefined') {
+            return;
+          }
+
+          let submitting = false;
+          form.addEventListener('submit', (event) => {
+            if (submitting) {
+              return;
+            }
+
+            event.preventDefault();
+            grecaptcha.ready(() => {
+              grecaptcha.execute('<?php echo htmlspecialchars($recaptchaSiteKey, ENT_QUOTES); ?>', { action: 'portal_login' }).then((token) => {
+                tokenInput.value = token;
+                submitting = true;
+                form.submit();
+              }).catch(() => {
+                const existingError = form.querySelector('.error');
+                if (existingError) {
+                  existingError.textContent = 'Impossible de charger reCAPTCHA.';
+                  return;
+                }
+
+                const errorBox = document.createElement('div');
+                errorBox.className = 'error';
+                errorBox.textContent = 'Impossible de charger reCAPTCHA.';
+                form.appendChild(errorBox);
+              });
+            });
+          });
+        })();
+      </script>
+    <?php endif; ?>
   </body>
 </html>

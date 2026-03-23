@@ -25,7 +25,7 @@ $assignmentOptions = robot_assignment_options();
         <div class="topbar">
           <div class="brand">
             <strong>IHM — Supervision des 3 robots</strong>
-            <span class="muted">Prototype UI (boutons non connectés aux robots pour l’instant)</span>
+            <span class="muted">Vue simplifiée pour piloter sans se noyer dans les détails</span>
           </div>
           <div class="row">
             <a class="btn" href="/">Portail</a>
@@ -35,17 +35,32 @@ $assignmentOptions = robot_assignment_options();
 
         <div class="content">
           <div class="grid">
-            <div class="panel" style="grid-column: span 12;">
-              <h2>Contrôles globaux</h2>
-              <div class="row">
-                <button class="btn primary" type="button" data-global-action="launch-all">Lancement robots collaboratifs</button>
-                <span class="badge"><span class="dot good"></span> Session OK</span>
-                <span class="badge" data-global-summary>Chargement de l'etat...</span>
+            <section class="hero-panel" style="grid-column: span 12;">
+              <div class="hero-copy">
+                <span class="eyebrow">Vue d'ensemble</span>
+                <h1>Supervision simplifiée des 3 robots</h1>
+                <p class="muted hero-text">
+                  Les actions importantes sont visibles tout de suite. Les angles et détails techniques restent disponibles plus bas, seulement si tu en as besoin.
+                </p>
               </div>
-              <p class="muted" style="margin:10px 0 0 0;" data-global-feedback>
-                Les boutons pilotent maintenant l'etat IHM des 3 robots et renvoient les positions angulaires memorisees.
+              <div class="hero-actions">
+                <button class="btn primary btn-wide" type="button" data-global-action="launch-all">Lancer les robots actifs</button>
+                <div class="row">
+                  <span class="badge"><span class="dot good"></span> Session OK</span>
+                  <span class="badge" data-global-summary>Chargement de l'etat...</span>
+                </div>
+                <p class="muted hero-feedback" data-global-feedback>
+                  L'IHM envoie les commandes principales et garde les retours techniques en second plan.
+                </p>
+              </div>
+            </section>
+
+            <section class="section-intro" style="grid-column: span 12;">
+              <h2>Robots</h2>
+              <p class="muted">
+                Chaque carte contient uniquement la position, l'etat et deux boutons d'action. Ouvre les details seulement pour voir les angles.
               </p>
-            </div>
+            </section>
 
             <?php
               $robots = [
@@ -55,51 +70,51 @@ $assignmentOptions = robot_assignment_options();
               ];
               foreach ($robots as $robot):
             ?>
-              <div class="panel" style="grid-column: span 4;" data-robot-card data-robot-id="<?php echo (int)$robot['id']; ?>">
-                <div class="row" style="justify-content: space-between;">
-                  <h3 style="margin:0;"><?php echo htmlspecialchars($robot['name'], ENT_QUOTES); ?></h3>
+              <article class="panel robot-panel" style="grid-column: span 4;" data-robot-card data-robot-id="<?php echo (int)$robot['id']; ?>">
+                <div class="robot-card-head">
+                  <div>
+                    <span class="robot-kicker">Commande rapide</span>
+                    <h3 style="margin:4px 0 0 0;"><?php echo htmlspecialchars($robot['name'], ENT_QUOTES); ?></h3>
+                  </div>
                   <span class="badge"><span class="dot" data-dot></span><span data-status>—</span></span>
                 </div>
 
-                <div style="margin-top: 12px;" class="row">
+                <div class="robot-select">
+                  <label for="assignment-<?php echo (int)$robot['id']; ?>">Position choisie</label>
+                  <select id="assignment-<?php echo (int)$robot['id']; ?>" data-action="assignment">
+                    <?php foreach ($assignmentOptions as $key => $option): ?>
+                      <option value="<?php echo htmlspecialchars($key, ENT_QUOTES); ?>">
+                        <?php echo htmlspecialchars((string)$option['label'], ENT_QUOTES); ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+
+                <div class="robot-actions">
                   <button class="btn" type="button" data-action="toggle-active">Actif/Inactif</button>
                   <button class="btn primary" type="button" data-action="start-stop">Démarrer</button>
                 </div>
 
-                <div style="margin-top: 12px;">
-                  <div class="muted" style="font-size:12px;">Affectation de position</div>
-                  <div style="margin-top:6px;">
-                    <label for="assignment-<?php echo (int)$robot['id']; ?>">Position de lancement</label>
-                    <select id="assignment-<?php echo (int)$robot['id']; ?>" data-action="assignment">
-                      <?php foreach ($assignmentOptions as $key => $option): ?>
-                        <option value="<?php echo htmlspecialchars($key, ENT_QUOTES); ?>">
-                          <?php echo htmlspecialchars((string)$option['label'], ENT_QUOTES); ?>
-                        </option>
-                      <?php endforeach; ?>
-                    </select>
-                  </div>
+                <div class="robot-summary">
+                  <span class="badge">Mode: <span data-mode>manuel</span></span>
+                  <span class="badge">Dernier log: <span data-log>—</span></span>
                 </div>
 
-                <div style="margin-top: 12px;">
-                  <div class="muted" style="font-size:12px;">Retour des positions angulaires</div>
-                  <div class="angles-grid" style="margin-top:6px;">
-                    <span class="badge">S6: <strong data-angle="servo_6">—</strong></span>
-                    <span class="badge">S7: <strong data-angle="servo_7">—</strong></span>
-                    <span class="badge">S8: <strong data-angle="servo_8">—</strong></span>
-                    <span class="badge">S9: <strong data-angle="servo_9">—</strong></span>
-                    <span class="badge">S10: <strong data-angle="servo_10">—</strong></span>
-                    <span class="badge">S11: <strong data-angle="servo_11">—</strong></span>
+                <details class="robot-details">
+                  <summary>Voir les détails techniques</summary>
+                  <div class="robot-details-content">
+                    <div class="muted section-label">Retour des positions angulaires</div>
+                    <div class="angles-grid">
+                      <span class="badge">S6: <strong data-angle="servo_6">—</strong></span>
+                      <span class="badge">S7: <strong data-angle="servo_7">—</strong></span>
+                      <span class="badge">S8: <strong data-angle="servo_8">—</strong></span>
+                      <span class="badge">S9: <strong data-angle="servo_9">—</strong></span>
+                      <span class="badge">S10: <strong data-angle="servo_10">—</strong></span>
+                      <span class="badge">S11: <strong data-angle="servo_11">—</strong></span>
+                    </div>
                   </div>
-                </div>
-
-                <div style="margin-top: 12px;">
-                  <div class="muted" style="font-size:12px;">Affectation / statut</div>
-                  <div class="row" style="margin-top:6px;">
-                    <span class="badge">Mode: <span data-mode>manuel</span></span>
-                    <span class="badge">Dernier log: <span data-log>—</span></span>
-                  </div>
-                </div>
-              </div>
+                </details>
+              </article>
             <?php endforeach; ?>
           </div>
         </div>

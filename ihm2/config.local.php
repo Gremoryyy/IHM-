@@ -1,8 +1,0 @@
-<?php
-declare(strict_types=1);
-
-// Copier ce fichier vers `config.local.php` (non versionné) et modifier les valeurs.
-return [
-    'ACCESS_CODE' => '',
-];
-

@@ -1,5 +1,3 @@
-import { createRobotVisual } from './robot-visual.js';
-
 (() => {
   const qs = (sel, root = document) => root.querySelector(sel);
   const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -19,7 +17,7 @@ import { createRobotVisual } from './robot-visual.js';
   let currentState = null;
   let assignmentOptions = {};
   let demoMode = window.localStorage.getItem('robot-demo-mode') === '1';
-  const visual = visualContainer ? createRobotVisual(visualContainer) : null;
+  let visual = null;
 
   const createDemoState = () => ({
     updated_at: new Date().toISOString(),
@@ -211,6 +209,21 @@ import { createRobotVisual } from './robot-visual.js';
     assignmentOptions = data.assignment_options || {};
     render();
   };
+
+  if (visualContainer) {
+    import('./robot-visual.js')
+      .then((module) => {
+        if (typeof module.createRobotVisual === 'function') {
+          visual = module.createRobotVisual(visualContainer);
+          render();
+        }
+      })
+      .catch(() => {
+        if (visualStatus) {
+          visualStatus.textContent = 'Visualisation 3D indisponible';
+        }
+      });
+  }
 
   btnDemoToggle?.addEventListener('click', async () => {
     demoMode = !demoMode;

@@ -26,94 +26,82 @@ csrf_verify_request_or_fail($payload);
 $action = (string)($payload['action'] ?? '');
 $robotId = (int)($payload['robot_id'] ?? 0);
 $assignment = (string)($payload['assignment'] ?? '');
+$userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 1;
 
-$state = robot_load_state();
+try {
+    $state = robot_load_state($CONFIG);
+} catch (Throwable $e) {
+    robot_json_response([
+        'ok' => false,
+        'error' => 'Impossible de charger la BDD.',
+        'details' => $e->getMessage(),
+    ], 500);
+}
 
 if ($action === 'launch_all') {
-    foreach ($state['robots'] as $index => $robot) {
+    foreach ($state['robots'] as $robot) {
         if (!($robot['active'] ?? false)) {
             continue;
         }
 
-        $assignmentKey = (string)($robot['assignment'] ?? 'position_1');
-        $state['robots'][$index]['running'] = true;
-        $state['robots'][$index]['status'] = 'En cours';
-        $state['robots'][$index]['last_log'] = 'Lancement collaboratif';
-        $state['robots'][$index]['current_angles'] = robot_angles_for_assignment($assignmentKey, true);
+        robot_create_motion_command(
+            $CONFIG,
+            (int)$robot['id'],
+            (int)$robot['box_number'],
+            $userId,
+            'Lancement collaboratif depuis l IHM'
+        );
     }
 
-    robot_save_state($state);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['ok' => true, 'state' => $state], JSON_UNESCAPED_UNICODE);
-    exit;
+    robot_json_response([
+        'ok' => true,
+        'state' => robot_load_state($CONFIG),
+    ]);
 }
 
 if ($robotId <= 0) {
-    http_response_code(422);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['ok' => false, 'error' => 'Robot invalide.'], JSON_UNESCAPED_UNICODE);
-    exit;
+    robot_json_response(['ok' => false, 'error' => 'Robot invalide.'], 422);
 }
 
-foreach ($state['robots'] as $index => $robot) {
+foreach ($state['robots'] as $robot) {
     if ((int)($robot['id'] ?? 0) !== $robotId) {
         continue;
     }
 
     switch ($action) {
         case 'toggle_active':
-            $isActive = !($robot['active'] ?? false);
-            $state['robots'][$index]['active'] = $isActive;
-            $state['robots'][$index]['running'] = false;
-            $state['robots'][$index]['status'] = $isActive ? 'Pret' : 'Inactif';
-            $state['robots'][$index]['last_log'] = $isActive ? 'Robot reactive' : 'Robot desactive';
-            $state['robots'][$index]['current_angles'] = robot_angles_for_assignment((string)$robot['assignment'], false);
+            robot_update_active_state($CONFIG, $robotId, !($robot['active'] ?? false), $userId);
             break;
 
         case 'toggle_running':
             if (!($robot['active'] ?? false)) {
-                http_response_code(422);
-                header('Content-Type: application/json; charset=utf-8');
-                echo json_encode(['ok' => false, 'error' => 'Le robot est inactif.'], JSON_UNESCAPED_UNICODE);
-                exit;
+                robot_json_response(['ok' => false, 'error' => 'Le robot est inactif.'], 422);
             }
 
-            $isRunning = !($robot['running'] ?? false);
-            $assignmentKey = (string)($robot['assignment'] ?? 'position_1');
-            $state['robots'][$index]['running'] = $isRunning;
-            $state['robots'][$index]['status'] = $isRunning ? 'En cours' : 'Pret';
-            $state['robots'][$index]['last_log'] = $isRunning ? 'Sequence lancee' : 'Sequence arretee';
-            $state['robots'][$index]['current_angles'] = robot_angles_for_assignment($assignmentKey, $isRunning);
+            if ($robot['running'] ?? false) {
+                robot_create_stop_command($CONFIG, $robotId, $userId);
+            } else {
+                robot_create_motion_command($CONFIG, $robotId, (int)$robot['box_number'], $userId, 'Commande unitaire depuis l IHM');
+            }
             break;
 
         case 'set_assignment':
             $options = robot_assignment_options();
             if (!isset($options[$assignment])) {
-                http_response_code(422);
-                header('Content-Type: application/json; charset=utf-8');
-                echo json_encode(['ok' => false, 'error' => 'Position invalide.'], JSON_UNESCAPED_UNICODE);
-                exit;
+                robot_json_response(['ok' => false, 'error' => 'Position invalide.'], 422);
             }
 
-            $state['robots'][$index]['assignment'] = $assignment;
-            $state['robots'][$index]['status'] = ($robot['active'] ?? false) ? (($robot['running'] ?? false) ? 'En cours' : 'Pret') : 'Inactif';
-            $state['robots'][$index]['last_log'] = 'Affectation mise a jour';
-            $state['robots'][$index]['current_angles'] = robot_angles_for_assignment($assignment, (bool)($robot['running'] ?? false));
+            robot_save_assignment($CONFIG, $robotId, robot_box_number_from_assignment($assignment), $userId);
             break;
 
         default:
-            http_response_code(422);
-            header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['ok' => false, 'error' => 'Action inconnue.'], JSON_UNESCAPED_UNICODE);
-            exit;
+            robot_json_response(['ok' => false, 'error' => 'Action inconnue.'], 422);
     }
 
-    robot_save_state($state);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['ok' => true, 'state' => $state], JSON_UNESCAPED_UNICODE);
-    exit;
+    robot_json_response([
+        'ok' => true,
+        'state' => robot_load_state($CONFIG),
+    ]);
 }
 
-http_response_code(404);
-header('Content-Type: application/json; charset=utf-8');
-echo json_encode(['ok' => false, 'error' => 'Robot introuvable.'], JSON_UNESCAPED_UNICODE);
+robot_json_response(['ok' => false, 'error' => 'Robot introuvable.'], 404);

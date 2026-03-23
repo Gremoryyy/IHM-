@@ -8,13 +8,19 @@ require __DIR__ . '/../lib/store.php';
 ensure_session_started($CONFIG);
 portal_require_auth($CONFIG);
 
-header('Content-Type: application/json; charset=utf-8');
+try {
+    $state = robot_load_state($CONFIG);
 
-$state = robot_load_state();
-
-echo json_encode([
-    'ok' => true,
-    'csrf' => csrf_token(),
-    'assignment_options' => robot_assignment_options(),
-    'state' => $state,
-], JSON_UNESCAPED_UNICODE);
+    robot_json_response([
+        'ok' => true,
+        'csrf' => csrf_token(),
+        'assignment_options' => robot_assignment_options(),
+        'state' => $state,
+    ]);
+} catch (Throwable $e) {
+    robot_json_response([
+        'ok' => false,
+        'error' => 'Impossible de charger la BDD.',
+        'details' => $e->getMessage(),
+    ], 500);
+}

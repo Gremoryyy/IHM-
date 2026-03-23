@@ -16,6 +16,13 @@ $default = [
 
     // Nom du cookie de session (évite les collisions avec d'autres projets).
     'SESSION_NAME' => 'robot_ihm2_session',
+
+    // Base de donnees MariaDB / MySQL.
+    'DB_HOST' => '127.0.0.1',
+    'DB_PORT' => 3306,
+    'DB_NAME' => 'robot6ddl',
+    'DB_USER' => 'root',
+    'DB_PASS' => '',
 ];
 
 $localPath = __DIR__ . '/config.local.php';
@@ -29,4 +36,3 @@ if (is_file($localPath)) {
 }
 
 return $default;
-

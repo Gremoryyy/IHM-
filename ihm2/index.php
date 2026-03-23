@@ -5,6 +5,7 @@ require __DIR__ . '/lib/bootstrap.php';
 require __DIR__ . '/lib/auth.php';
 
 ensure_session_started($CONFIG);
+portal_captcha_question();
 
 if (portal_is_authed($CONFIG)) {
     $next = normalize_next_path((string)($_GET['next'] ?? ''), '/dashboard.php');
@@ -19,8 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $accepted = (bool)($_POST['accept_terms'] ?? false);
     $code = trim((string)($_POST['code'] ?? ''));
+    $captcha = trim((string)($_POST['captcha'] ?? ''));
 
-    $result = portal_login($CONFIG, $accepted, $code);
+    $result = portal_login($CONFIG, $accepted, $code, $captcha);
     if (($result['ok'] ?? false) === true) {
         redirect_to($next);
     }
@@ -28,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $needsCode = ((string)($CONFIG['ACCESS_CODE'] ?? '')) !== '';
+$captchaQuestion = portal_captcha_question();
 ?>
 <!doctype html>
 <html lang="fr">
@@ -53,7 +56,7 @@ $needsCode = ((string)($CONFIG['ACCESS_CODE'] ?? '')) !== '';
             <div class="panel" style="grid-column: span 7;">
               <h2>Connexion</h2>
               <p class="muted" style="margin-top:0;">
-                Pour accéder à l'IHM, accepte les conditions d'utilisation<?php echo $needsCode ? ' et saisis le code d’accès.' : '.'; ?>
+                Pour accéder à l'IHM, accepte les conditions d'utilisation<?php echo $needsCode ? ', saisis le mot de passe' : ''; ?> et complète le captcha.
               </p>
 
               <form method="post" action="/?<?php echo http_build_query(['next' => $next]); ?>">
@@ -61,10 +64,18 @@ $needsCode = ((string)($CONFIG['ACCESS_CODE'] ?? '')) !== '';
 
                 <?php if ($needsCode): ?>
                   <div style="margin-bottom: 12px;">
-                    <label for="code">Code d'accès</label>
-                    <input id="code" name="code" type="password" autocomplete="current-password" placeholder="Ex: robot2026" required />
+                    <label for="code">Mot de passe</label>
+                    <input id="code" name="code" type="password" autocomplete="current-password" placeholder="Entre le mot de passe d'accès" required />
                   </div>
                 <?php endif; ?>
+
+                <div style="margin-bottom: 12px;">
+                  <label for="captcha"><?php echo htmlspecialchars($captchaQuestion, ENT_QUOTES); ?></label>
+                  <input id="captcha" name="captcha" type="text" inputmode="numeric" autocomplete="off" placeholder="Ta réponse" required />
+                  <div class="muted" style="margin-top:6px; font-size:12px;">
+                    Vérification simple pour éviter les accès automatiques.
+                  </div>
+                </div>
 
                 <div style="margin: 10px 0 14px 0;">
                   <label style="margin-bottom:0;">

@@ -29,15 +29,52 @@ function portal_require_auth(array $config): void
     }
 }
 
-function portal_login(array $config, bool $acceptedTerms, string $code): array
+function portal_refresh_captcha(): void
+{
+    $_SESSION['portal_captcha_left'] = random_int(1, 9);
+    $_SESSION['portal_captcha_right'] = random_int(1, 9);
+    $_SESSION['portal_captcha_answer'] = (int)$_SESSION['portal_captcha_left'] + (int)$_SESSION['portal_captcha_right'];
+}
+
+function portal_captcha_question(): string
+{
+    if (!isset($_SESSION['portal_captcha_answer'])) {
+        portal_refresh_captcha();
+    }
+
+    return sprintf(
+        'Combien font %d + %d ?',
+        (int)($_SESSION['portal_captcha_left'] ?? 0),
+        (int)($_SESSION['portal_captcha_right'] ?? 0)
+    );
+}
+
+function portal_validate_captcha(string $captcha): bool
+{
+    if (!isset($_SESSION['portal_captcha_answer'])) {
+        portal_refresh_captcha();
+        return false;
+    }
+
+    return ctype_digit($captcha)
+        && (int)$captcha === (int)($_SESSION['portal_captcha_answer'] ?? -1);
+}
+
+function portal_login(array $config, bool $acceptedTerms, string $code, string $captcha): array
 {
     if (!$acceptedTerms) {
         return ['ok' => false, 'error' => 'Tu dois accepter les conditions d’utilisation.'];
     }
 
+    if (!portal_validate_captcha($captcha)) {
+        portal_refresh_captcha();
+        return ['ok' => false, 'error' => 'Captcha incorrect.'];
+    }
+
     $requiredCode = (string)($config['ACCESS_CODE'] ?? '');
     if ($requiredCode !== '') {
         if (!hash_equals($requiredCode, $code)) {
+            portal_refresh_captcha();
             return ['ok' => false, 'error' => 'Code d’accès incorrect.'];
         }
     }
@@ -46,6 +83,7 @@ function portal_login(array $config, bool $acceptedTerms, string $code): array
     $_SESSION['portal_auth'] = true;
     $_SESSION['portal_auth_at'] = time();
     $_SESSION['portal_terms_accepted'] = true;
+    portal_refresh_captcha();
 
     return ['ok' => true, 'error' => null];
 }

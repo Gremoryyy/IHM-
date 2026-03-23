@@ -462,3 +462,55 @@ function robot_create_stop_command(array $config, int $robotId, ?int $userId = n
 
     return $commandId;
 }
+
+/**
+ * @return list<array<string, mixed>>
+ */
+function robot_fetch_action_logs(array $config, int $limit = 30): array
+{
+    $pdo = robot_get_pdo($config);
+    $stmt = $pdo->prepare('
+        SELECT
+            l.id,
+            l.robot_id,
+            r.robot_name,
+            l.action_type,
+            l.commande,
+            l.box_number,
+            l.status,
+            l.details,
+            l.action_time
+        FROM robot_action_logs l
+        INNER JOIN robots r ON r.id = l.robot_id
+        ORDER BY l.action_time DESC, l.id DESC
+        LIMIT ?
+    ');
+    $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+    $stmt->execute();
+
+    return $stmt->fetchAll();
+}
+
+/**
+ * @return list<array<string, mixed>>
+ */
+function robot_fetch_sensor_states(array $config): array
+{
+    $pdo = robot_get_pdo($config);
+    $stmt = $pdo->query('
+        SELECT
+            s.id,
+            s.robot_id,
+            r.robot_name,
+            s.sensor_pin,
+            s.box_number,
+            s.box_present,
+            s.note,
+            s.updated_at
+        FROM sensor_states s
+        INNER JOIN robots r ON r.id = s.robot_id
+        ORDER BY s.robot_id ASC, s.box_number ASC
+    ');
+
+    return $stmt->fetchAll();
+}

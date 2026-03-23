@@ -28,6 +28,8 @@ $assignmentOptions = robot_assignment_options();
             <span class="muted">Vue simplifiée pour piloter sans se noyer dans les détails</span>
           </div>
           <div class="row">
+            <a class="btn" href="/history.php">Historique</a>
+            <a class="btn" href="/sensors.php">Capteurs</a>
             <a class="btn" href="/">Portail</a>
             <a class="btn danger" href="/logout.php">Déconnexion</a>
           </div>
@@ -48,6 +50,12 @@ $assignmentOptions = robot_assignment_options();
                 <div class="row">
                   <span class="badge"><span class="dot good"></span> Session OK</span>
                   <span class="badge" data-global-summary>Chargement de l'etat...</span>
+                  <span class="badge" data-demo-badge>Mode démo inactif</span>
+                </div>
+                <div class="row">
+                  <button class="btn" type="button" data-demo-toggle>Activer le mode démo</button>
+                  <a class="btn" href="/history.php">Voir l'historique</a>
+                  <a class="btn" href="/sensors.php">Voir les capteurs</a>
                 </div>
                 <p class="muted hero-feedback" data-global-feedback>
                   L'IHM envoie les commandes principales et garde les retours techniques en second plan.

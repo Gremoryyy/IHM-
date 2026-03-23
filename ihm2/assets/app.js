@@ -6,9 +6,32 @@
   const globalSummary = qs('[data-global-summary]');
   const globalFeedback = qs('[data-global-feedback]');
   const btnLaunchAll = qs('[data-global-action="launch-all"]');
+  const btnDemoToggle = qs('[data-demo-toggle]');
+  const demoBadge = qs('[data-demo-badge]');
 
   let currentState = null;
   let assignmentOptions = {};
+  let demoMode = window.localStorage.getItem('robot-demo-mode') === '1';
+
+  const createDemoState = () => ({
+    updated_at: new Date().toISOString(),
+    robots: [
+      { id: 1, name: 'robot_1', active: true, running: false, assignment: 'box_1', box_number: 1, last_log: 'Mode démo prêt', current_angles: { servo_6: 40, servo_7: 130, servo_8: 180, servo_9: 80, servo_10: 0, servo_11: 120 } },
+      { id: 2, name: 'robot_2', active: true, running: false, assignment: 'box_2', box_number: 2, last_log: 'Mode démo prêt', current_angles: { servo_6: 40, servo_7: 130, servo_8: 180, servo_9: 80, servo_10: 0, servo_11: 120 } },
+      { id: 3, name: 'robot_3', active: true, running: false, assignment: 'box_3', box_number: 3, last_log: 'Mode démo prêt', current_angles: { servo_6: 40, servo_7: 130, servo_8: 180, servo_9: 80, servo_10: 0, servo_11: 120 } },
+    ],
+  });
+
+  const currentAnglesForAssignment = (assignment, running) => {
+    const home = { servo_6: 40, servo_7: 130, servo_8: 180, servo_9: 80, servo_10: 0, servo_11: 120 };
+    const activeProfiles = {
+      box_1: { servo_6: 160, servo_7: 60, servo_8: 170, servo_9: 80, servo_10: 40, servo_11: 150 },
+      box_2: { servo_6: 135, servo_7: 60, servo_8: 170, servo_9: 80, servo_10: 40, servo_11: 150 },
+      box_3: { servo_6: 110, servo_7: 60, servo_8: 170, servo_9: 80, servo_10: 40, servo_11: 150 },
+      box_4: { servo_6: 85, servo_7: 60, servo_8: 170, servo_9: 80, servo_10: 40, servo_11: 150 },
+    };
+    return running ? (activeProfiles[assignment] || home) : home;
+  };
 
   const assignmentLabel = (key) => assignmentOptions[key]?.label || key || '—';
 
@@ -21,6 +44,12 @@
     const runningCount = robots.filter((robot) => robot.running).length;
     if (globalSummary) {
       globalSummary.textContent = `${activeCount}/3 actifs • ${runningCount}/3 en cours`;
+    }
+    if (demoBadge) {
+      demoBadge.textContent = demoMode ? 'Mode démo actif' : 'Mode démo inactif';
+    }
+    if (btnDemoToggle) {
+      btnDemoToggle.textContent = demoMode ? 'Désactiver le mode démo' : 'Activer le mode démo';
     }
   };
 
@@ -82,6 +111,44 @@
   };
 
   const postAction = async (payload) => {
+    if (demoMode) {
+      const robots = currentState?.robots || createDemoState().robots;
+      const robot = robots.find((item) => Number(item.id) === Number(payload.robot_id));
+
+      if (payload.action === 'launch_all') {
+        robots.forEach((item) => {
+          if (!item.active) return;
+          item.running = true;
+          item.last_log = 'Démo : lancement collaboratif';
+          item.current_angles = currentAnglesForAssignment(item.assignment, true);
+        });
+      }
+
+      if (robot && payload.action === 'toggle_active') {
+        robot.active = !robot.active;
+        robot.running = false;
+        robot.last_log = robot.active ? 'Démo : robot activé' : 'Démo : robot désactivé';
+        robot.current_angles = currentAnglesForAssignment(robot.assignment, false);
+      }
+
+      if (robot && payload.action === 'toggle_running') {
+        if (!robot.active) throw new Error('Le robot est inactif.');
+        robot.running = !robot.running;
+        robot.last_log = robot.running ? 'Démo : séquence lancée' : 'Démo : séquence arrêtée';
+        robot.current_angles = currentAnglesForAssignment(robot.assignment, robot.running);
+      }
+
+      if (robot && payload.action === 'set_assignment') {
+        robot.assignment = payload.assignment;
+        robot.last_log = `Démo : affectation ${assignmentLabel(payload.assignment)}`;
+        robot.current_angles = currentAnglesForAssignment(robot.assignment, robot.running);
+      }
+
+      currentState = { updated_at: new Date().toISOString(), robots };
+      render();
+      return { ok: true, state: currentState };
+    }
+
     const response = await fetch('/api/action.php', {
       method: 'POST',
       headers: {
@@ -102,6 +169,19 @@
   };
 
   const fetchState = async () => {
+    if (demoMode) {
+      currentState = createDemoState();
+      assignmentOptions = {
+        box_1: { label: 'Boite 1' },
+        box_2: { label: 'Boite 2' },
+        box_3: { label: 'Boite 3' },
+        box_4: { label: 'Boite 4' },
+      };
+      render();
+      setGlobalMessage('Mode démo actif : aucune commande réelle n’est envoyée.');
+      return;
+    }
+
     const response = await fetch('/api/state.php', { headers: { Accept: 'application/json' } });
     const data = await response.json();
     if (!response.ok || !data.ok) {
@@ -112,6 +192,12 @@
     assignmentOptions = data.assignment_options || {};
     render();
   };
+
+  btnDemoToggle?.addEventListener('click', async () => {
+    demoMode = !demoMode;
+    window.localStorage.setItem('robot-demo-mode', demoMode ? '1' : '0');
+    await fetchState();
+  });
 
   btnLaunchAll?.addEventListener('click', async () => {
     btnLaunchAll.disabled = true;

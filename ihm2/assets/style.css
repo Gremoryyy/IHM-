@@ -295,6 +295,45 @@ select:focus { border-color: rgba(124,92,255,0.7); }
   margin-bottom: 10px;
 }
 
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.history-item {
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+}
+
+.history-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.history-meta,
+.sensor-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.history-details {
+  margin: 12px 0 0 0;
+  line-height: 1.45;
+}
+
+.sensor-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 @keyframes pulse {
   0% { transform: scale(1); box-shadow: 0 0 0 3px rgba(255,255,255,0.06); }
   50% { transform: scale(1.12); box-shadow: 0 0 0 6px rgba(59,214,113,0.14); }
@@ -322,5 +361,6 @@ summary { cursor: pointer; color: var(--muted); font-weight: 700; }
   .hero-panel h1 { font-size: 28px; }
   .section-intro { display: block; }
   .robot-actions { grid-template-columns: 1fr; }
+  .history-head { align-items: start; flex-direction: column; }
   .angles-grid { grid-template-columns: 1fr; }
 }

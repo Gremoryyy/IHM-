@@ -7,156 +7,102 @@ require __DIR__ . '/lib/store.php';
 
 ensure_session_started($CONFIG);
 portal_require_auth($CONFIG);
-
-$assignmentOptions = robot_assignment_options();
 ?>
 <!doctype html>
 <html lang="fr">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>IHM — Supervision robots</title>
-    <meta name="csrf-token" content="<?php echo htmlspecialchars(csrf_token(), ENT_QUOTES); ?>" />
-    <link rel="stylesheet" href="/assets/style.css" />
-  </head>
-  <body>
-    <div class="wrap" style="align-items: stretch;">
-      <div class="card">
-        <div class="topbar">
-          <div class="brand">
-            <strong>IHM — Supervision des 3 robots</strong>
-            <span class="muted">Vue simplifiée pour piloter sans se noyer dans les détails</span>
-          </div>
-          <div class="row">
-            <a class="btn" href="/history.php">Historique</a>
-            <a class="btn" href="/sensors.php">Capteurs</a>
-            <a class="btn" href="/">Portail</a>
-            <a class="btn danger" href="/logout.php">Déconnexion</a>
-          </div>
-        </div>
-
-        <div class="content">
-          <div class="grid">
-            <section class="hero-panel" style="grid-column: span 12;">
-              <div class="hero-copy">
-                <span class="eyebrow">Vue d'ensemble</span>
-                <h1>Supervision simplifiée des 3 robots</h1>
-                <p class="muted hero-text">
-                  Les actions importantes sont visibles tout de suite. Les angles et détails techniques restent disponibles plus bas, seulement si tu en as besoin.
-                </p>
-              </div>
-              <div class="hero-actions">
-                <button class="btn primary btn-wide" type="button" data-global-action="launch-all">Lancer les robots actifs</button>
-                <div class="row">
-                  <span class="badge"><span class="dot good"></span> Session OK</span>
-                  <span class="badge" data-global-summary>Chargement de l'etat...</span>
-                  <span class="badge" data-demo-badge>Mode démo inactif</span>
-                </div>
-                <div class="row">
-                  <button class="btn" type="button" data-demo-toggle>Activer le mode démo</button>
-                  <a class="btn" href="/history.php">Voir l'historique</a>
-                  <a class="btn" href="/sensors.php">Voir les capteurs</a>
-                </div>
-                <p class="muted hero-feedback" data-global-feedback>
-                  L'IHM envoie les commandes principales et garde les retours techniques en second plan.
-                </p>
-              </div>
-            </section>
-
-            <section class="panel demo-visual-panel" style="grid-column: span 12;">
-              <div class="robot-card-head">
-                <div>
-                  <span class="eyebrow">Simulation 3D</span>
-                  <h2 style="margin:4px 0 0 0;">Aperçu simplifié du bras robot</h2>
-                </div>
-                <span class="badge" data-visual-status>Visualisation prête</span>
-              </div>
-              <p class="muted" style="margin-top:0;">
-                Active le mode démo pour voir un bras 3D stylisé suivre les angles de la commande en cours.
-              </p>
-              <div class="demo-visual-grid">
-                <div class="demo-visual-canvas" data-robot-visual></div>
-                <div class="demo-visual-info">
-                  <span class="badge">Robot affiché: <span data-visual-robot>Robot 1</span></span>
-                  <span class="badge">Position: <span data-visual-assignment>Boite 1</span></span>
-                  <span class="badge">Etat: <span data-visual-mode>Attente</span></span>
-                  <p class="muted" data-visual-caption>
-                    Le bras se repositionne automatiquement selon les angles affichés dans le détail technique.
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            <section class="section-intro" style="grid-column: span 12;">
-              <h2>Robots</h2>
-              <p class="muted">
-                Chaque carte contient uniquement la position, l'etat et deux boutons d'action. Ouvre les details seulement pour voir les angles.
-              </p>
-            </section>
-
-            <?php
-              $robots = [
-                ['id' => 1, 'name' => 'Robot 1'],
-                ['id' => 2, 'name' => 'Robot 2'],
-                ['id' => 3, 'name' => 'Robot 3'],
-              ];
-              foreach ($robots as $robot):
-            ?>
-              <article class="panel robot-panel" style="grid-column: span 4;" data-robot-card data-robot-id="<?php echo (int)$robot['id']; ?>">
-                <div class="robot-card-head">
-                  <div>
-                    <span class="robot-kicker">Commande rapide</span>
-                    <h3 style="margin:4px 0 0 0;"><?php echo htmlspecialchars($robot['name'], ENT_QUOTES); ?></h3>
-                  </div>
-                  <span class="badge"><span class="dot" data-dot></span><span data-status>—</span></span>
-                </div>
-
-                <div class="robot-select">
-                  <label for="assignment-<?php echo (int)$robot['id']; ?>">Position choisie</label>
-                  <select id="assignment-<?php echo (int)$robot['id']; ?>" data-action="assignment">
-                    <?php foreach ($assignmentOptions as $key => $option): ?>
-                      <option value="<?php echo htmlspecialchars($key, ENT_QUOTES); ?>">
-                        <?php echo htmlspecialchars((string)$option['label'], ENT_QUOTES); ?>
-                      </option>
-                    <?php endforeach; ?>
-                  </select>
-                </div>
-
-                <div class="robot-actions">
-                  <button class="btn" type="button" data-action="toggle-active">Actif/Inactif</button>
-                  <button class="btn primary" type="button" data-action="start-stop">Démarrer</button>
-                </div>
-
-                <div class="robot-summary">
-                  <span class="badge">Mode: <span data-mode>manuel</span></span>
-                  <span class="badge">Dernier log: <span data-log>—</span></span>
-                </div>
-
-                <details class="robot-details">
-                  <summary>Voir les détails techniques</summary>
-                  <div class="robot-details-content">
-                    <div class="muted section-label">Retour des positions angulaires</div>
-                    <div class="angles-grid">
-                      <span class="badge">S6: <strong data-angle="servo_6">—</strong></span>
-                      <span class="badge">S7: <strong data-angle="servo_7">—</strong></span>
-                      <span class="badge">S8: <strong data-angle="servo_8">—</strong></span>
-                      <span class="badge">S9: <strong data-angle="servo_9">—</strong></span>
-                      <span class="badge">S10: <strong data-angle="servo_10">—</strong></span>
-                      <span class="badge">S11: <strong data-angle="servo_11">—</strong></span>
-                    </div>
-                  </div>
-                </details>
-              </article>
-            <?php endforeach; ?>
-          </div>
-        </div>
-
-        <div class="footer">
-          IHM2 • PHP/HTML • Portail d’accès (session + CGU + code optionnel)
-        </div>
-      </div>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="<?php echo htmlspecialchars(csrf_token(), ENT_QUOTES); ?>">
+  <title>Robots — Supervision</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Segoe UI", sans-serif; background: #0d1117; color: #e6edf3; min-height: 100vh; padding: 24px 16px; }
+    header { display: flex; justify-content: space-between; align-items: center; max-width: 900px; margin: 0 auto 32px; }
+    header h1 { font-size: 20px; font-weight: 600; }
+    header nav { display: flex; gap: 8px; }
+    .robots { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; max-width: 900px; margin: 0 auto; }
+    .robot-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; }
+    .robot-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .robot-name { font-size: 16px; font-weight: 600; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #30363d; display: inline-block; }
+    .status-dot.active { background: #3fb950; box-shadow: 0 0 6px #3fb950; }
+    .status-dot.running { background: #f0c442; box-shadow: 0 0 6px #f0c442; }
+    .status-dot.error { background: #f85149; box-shadow: 0 0 6px #f85149; }
+    .log { font-size: 12px; color: #8b949e; background: #0d1117; border-radius: 6px; padding: 10px 12px; min-height: 48px; margin-bottom: 16px; line-height: 1.5; }
+    .actions { display: flex; gap: 8px; }
+    button { flex: 1; padding: 9px 12px; border-radius: 8px; border: 1px solid #30363d; cursor: pointer; font-size: 13px; font-weight: 600; background: #21262d; color: #e6edf3; transition: background 0.15s; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    button.btn-start { background: rgba(63,185,80,0.15); border-color: rgba(63,185,80,0.4); color: #3fb950; }
+    button.btn-stop { background: rgba(248,81,73,0.15); border-color: rgba(248,81,73,0.4); color: #f85149; }
+    .btn-nav { font-size: 13px; padding: 7px 12px; border-radius: 8px; border: 1px solid #30363d; background: #21262d; color: #8b949e; text-decoration: none; font-weight: 500; }
+    .btn-nav.danger { color: #f85149; border-color: rgba(248,81,73,0.4); }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Supervision robots</h1>
+  <nav>
+    <a class="btn-nav" href="/history.php">Historique</a>
+    <a class="btn-nav danger" href="/logout.php">Déconnexion</a>
+  </nav>
+</header>
+<div class="robots" id="robots">
+  <?php foreach ([1 => 'Robot A', 2 => 'Robot B', 3 => 'Robot C'] as $id => $name): ?>
+  <div class="robot-card" data-id="<?= $id ?>">
+    <div class="robot-card-top">
+      <span class="robot-name"><?= htmlspecialchars($name) ?></span>
+      <span class="status-dot" data-dot></span>
     </div>
-
-    <script type="module" src="/assets/app.js"></script>
-  </body>
+    <div class="log" data-log>Chargement...</div>
+    <div class="actions">
+      <button class="btn-start" data-action="toggle-active">Activer</button>
+      <button class="btn-stop" data-action="toggle-running" disabled>Arreter</button>
+    </div>
+  </div>
+  <?php endforeach; ?>
+</div>
+<script>
+const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+async function post(url, body) {
+  const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...body, _csrf_token: CSRF }) });
+  return r.json();
+}
+async function refresh() {
+  const r = await fetch('/ihm2/api/state.php');
+  const data = await r.json();
+  if (!data.robots) return;
+  data.robots.forEach(robot => {
+    const card = document.querySelector('[data-id="' + robot.id + '"]');
+    if (!card) return;
+    const dot = card.querySelector('[data-dot]');
+    const log = card.querySelector('[data-log]');
+    const btnAct = card.querySelector('[data-action="toggle-active"]');
+    const btnRun = card.querySelector('[data-action="toggle-running"]');
+    dot.className = 'status-dot';
+    if (robot.running) dot.classList.add('running');
+    else if (robot.active) dot.classList.add('active');
+    else if (robot.status === 'error') dot.classList.add('error');
+    log.textContent = robot.last_log || 'Aucun log';
+    btnAct.textContent = robot.active ? 'Desactiver' : 'Activer';
+    btnAct.className = robot.active ? 'btn-stop' : 'btn-start';
+    btnRun.textContent = robot.running ? 'Arreter' : 'Demarrer';
+    btnRun.className = robot.running ? 'btn-stop' : 'btn-start';
+    btnRun.disabled = !robot.active;
+  });
+}
+document.getElementById('robots').addEventListener('click', async e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const card = btn.closest('[data-id]');
+  const id = parseInt(card.dataset.id);
+  btn.disabled = true;
+  await post('/ihm2/api/action.php', { action: btn.dataset.action === 'toggle-active' ? 'toggle_active' : 'toggle_running', robot_id: id });
+  await refresh();
+  btn.disabled = false;
+});
+refresh();
+setInterval(refresh, 3000);
+</script>
+</body>
 </html>
